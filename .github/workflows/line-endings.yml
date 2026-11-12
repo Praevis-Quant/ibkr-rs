@@ -1,0 +1,25 @@
+name: Line endings
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: No CRLF in committed text files
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Fail on CRLF or mixed line endings in the index
+        run: |
+          bad=$(git ls-files --eol | awk '$1 ~ /^i\/(crlf|mixed)$/ {print $NF}' || true)
+          if [ -n "$bad" ]; then
+            echo "These committed files have CRLF line endings; .gitattributes expects LF:"
+            echo "$bad"
+            echo "Fix with: git add --renormalize . && git commit"
+            exit 1
+          fi
+          echo "All committed text files use LF."
